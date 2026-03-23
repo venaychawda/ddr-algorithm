@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DDR Algorithm — Interactive Demo · Venay Chawda</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d10;--surface:#16161a;--surface2:#1e1e24;--surface3:#26262e;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e4e2db;--muted:#7a7870;--dim:#4a4845;
+  --teal:#1D9E75;--teal-l:#9FE1CB;--teal-bg:rgba(29,158,117,0.12);
+  --amber:#D4900A;--amber-l:#FAC775;--amber-bg:rgba(212,144,10,0.12);
+  --coral:#D85A30;--coral-l:#F5C4B3;--coral-bg:rgba(216,90,48,0.12);
+  --blue:#378ADD;--blue-l:#B5D4F4;--blue-bg:rgba(55,138,221,0.12);
+  --purple:#7F77DD;--purple-l:#CECBF6;--purple-bg:rgba(127,119,221,0.12);
+  --red:#E24B4A;--red-bg:rgba(226,75,74,0.12);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:28px 20px 60px}
+
+/* Header */
+.hdr{max-width:1040px;margin:0 auto 24px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.hdr-left .chip{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);border:1px solid var(--teal);padding:2px 9px;border-radius:3px;margin-bottom:10px}
+.hdr-left h1{font-size:clamp(18px,3vw,26px);font-weight:500;letter-spacing:-.02em;line-height:1.2}
+.hdr-left p{font-size:13px;color:var(--muted);margin-top:4px;font-weight:300}
+.hdr-right{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;line-height:1.8}
+
+/* Layout */
+.layout{max-width:1040px;margin:0 auto;display:grid;grid-template-columns:300px 1fr;gap:10px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}}
+
+/* Panels */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.panel-hdr{padding:9px 14px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.panel-hdr .dot{width:5px;height:5px;border-radius:50%;background:var(--teal)}
+.panel-body{padding:14px}
+
+/* Scenario picker */
+.scenario-list{display:flex;flex-direction:column;gap:3px}
+.sc-btn{background:transparent;border:1px solid transparent;border-radius:6px;padding:8px 12px;cursor:pointer;text-align:left;transition:all .15s;width:100%}
+.sc-btn:hover{background:var(--surface2);border-color:var(--border)}
+.sc-btn.active{background:var(--teal-bg);border-color:var(--teal)}
+.sc-btn .sc-name{font-size:12px;font-weight:500;color:var(--text);display:block}
+.sc-btn .sc-desc{font-size:10px;color:var(--muted);display:block;margin-top:2px;font-family:'DM Mono',monospace}
+.sc-btn.active .sc-name{color:var(--teal-l)}
+
+/* Right column */
+.right{display:flex;flex-direction:column;gap:10px}
+
+/* Direction output */
+.dir-output{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.dir-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center;transition:all .3s}
+.dir-card.active-fwd{background:var(--teal-bg);border-color:var(--teal)}
+.dir-card.active-rev{background:var(--amber-bg);border-color:var(--amber)}
+.dir-card.active-ss{background:var(--surface3);border-color:var(--border2)}
+.dir-card.active-unk{background:var(--red-bg);border-color:var(--red)}
+.dir-label{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.dir-value{font-size:18px;font-weight:500}
+.dir-card.active-fwd .dir-value{color:var(--teal-l)}
+.dir-card.active-rev .dir-value{color:var(--amber-l)}
+.dir-card.active-unk .dir-value{color:var(--coral-l)}
+
+/* Sensor inputs */
+.sensor-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sensor-row{display:flex;align-items:center;gap:8px}
+.sensor-lbl{font-size:11px;color:var(--muted);width:110px;flex-shrink:0}
+.bar-bg{flex:1;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.sensor-val{font-size:11px;font-family:'DM Mono',monospace;color:var(--text);width:64px;text-align:right;flex-shrink:0}
+
+/* Timeline */
+.timeline-wrap{position:relative;height:120px;background:var(--surface2);border-radius:8px;overflow:hidden}
+canvas#timeline{width:100%;height:100%;display:block}
+.tl-legend{display:flex;gap:14px;margin-top:6px;flex-wrap:wrap}
+.tl-leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.tl-leg-dot{width:10px;height:4px;border-radius:2px}
+
+/* Diagnostic flags */
+.diag-grid{display:flex;flex-wrap:wrap;gap:5px}
+.diag-flag{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:500;font-family:'DM Mono',monospace;background:var(--surface3);color:var(--dim);border:1px solid transparent;transition:all .25s}
+.diag-flag.on{color:var(--coral-l);background:var(--coral-bg);border-color:var(--coral)}
+
+/* Confidence bar */
+.conf-track{width:100%;height:10px;background:var(--surface3);border-radius:5px;overflow:hidden;margin:6px 0}
+.conf-fill{height:100%;border-radius:5px;transition:width .4s ease,background .4s}
+.conf-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+
+/* Challenge box */
+.challenge-box{background:var(--surface2);border-radius:8px;padding:12px 14px;border-left:3px solid var(--teal)}
+.challenge-title{font-size:11px;font-weight:500;color:var(--teal-l);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.challenge-text{font-size:12px;color:var(--text);line-height:1.6}
+.approach-text{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+
+/* Safety note */
+.safety-box{background:var(--surface2);border-radius:8px;padding:10px 14px;border-left:3px solid var(--amber)}
+.safety-title{font-size:10px;font-weight:500;color:var(--amber-l);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.safety-text{font-size:11px;color:var(--muted);line-height:1.6}
+
+/* Animate button */
+.animate-btn{background:var(--teal-bg);border:1px solid var(--teal);color:var(--teal-l);font-family:'DM Mono',monospace;font-size:11px;padding:6px 16px;border-radius:5px;cursor:pointer;transition:all .15s}
+.animate-btn:hover{background:var(--teal);color:#fff}
+.animate-btn.running{background:var(--coral-bg);border-color:var(--coral);color:var(--coral-l)}
+
+/* Layer pipeline mini-vis */
+.pipeline{display:flex;align-items:center;gap:0;margin-bottom:6px;flex-wrap:wrap}
+.pipe-step{font-size:10px;padding:3px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);white-space:nowrap;transition:all .2s}
+.pipe-step:first-child{border-radius:4px 0 0 4px}
+.pipe-step:last-child{border-radius:0 4px 4px 0}
+.pipe-step.active{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-l)}
+.pipe-arrow{font-size:10px;color:var(--dim);margin:0 -1px;z-index:1}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="chip">vehicle-ddr · open source</div>
+    <h1>Drive Direction Recognition — Interactive Demo</h1>
+    <p>Select a scenario · observe sensor fusion · explore the 8 edge cases</p>
+  </div>
+  <div class="hdr-right">
+    github.com/venaychawda/ddr-algorithm<br>
+    Venay Chawda · Function Owner DDR @ Bosch
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- Left: scenario list -->
+  <div class="panel">
+    <div class="panel-hdr"><span class="dot"></span>Driving scenarios</div>
+    <div class="panel-body">
+      <div class="scenario-list" id="sc-list"></div>
+    </div>
+  </div>
+
+  <!-- Right: output panels -->
+  <div class="right">
+
+    <!-- Algorithm pipeline -->
+    <div class="panel">
+      <div class="panel-hdr"><span class="dot"></span>Processing pipeline</div>
+      <div class="panel-body">
+        <div class="pipeline">
+          <span class="pipe-step" id="p1">L1 · Signal Processor</span>
+          <span class="pipe-arrow">›</span>
+          <span class="pipe-step" id="p2">L2 · Plausibility</span>
+          <span class="pipe-arrow">›</span>
+          <span class="pipe-step" id="p3">L3 · State Machine</span>
+          <span class="pipe-arrow">›</span>
+          <span class="pipe-step" id="p4">L4 · Confidence</span>
+          <span class="pipe-arrow">›</span>
+          <span class="pipe-step" id="p5">L5 · Diagnostics</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Direction output -->
+    <div class="panel">
+      <div class="panel-hdr"><span class="dot"></span>DDR output</div>
+      <div class="panel-body">
+        <div class="dir-output">
+          <div class="dir-card" id="card-dir">
+            <div class="dir-label">Direction</div>
+            <div class="dir-value" id="val-dir">—</div>
+          </div>
+          <div class="dir-card">
+            <div class="dir-label">Confidence</div>
+            <div class="dir-value" id="val-conf">—</div>
+          </div>
+          <div class="dir-card">
+            <div class="dir-label">Time in state</div>
+            <div class="dir-value" id="val-time">—</div>
+          </div>
+        </div>
+        <div class="conf-track" style="margin-top:10px">
+          <div class="conf-fill" id="conf-fill" style="width:0%"></div>
+        </div>
+        <div class="conf-label">
+          <span>0%</span><span id="conf-pct">—</span><span>100%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sensor inputs -->
+    <div class="panel">
+      <div class="panel-hdr"><span class="dot"></span>Sensor inputs (live during playback)</div>
+      <div class="panel-body">
+        <div class="sensor-grid">
+          <div>
+            <div class="sensor-row" style="margin-bottom:8px">
+              <span class="sensor-lbl">Wheel speed FL</span>
+              <div class="bar-bg"><div class="bar-fill" id="b-wfl" style="width:0%;background:var(--blue)"></div></div>
+              <span class="sensor-val" id="v-wfl">—</span>
+            </div>
+            <div class="sensor-row" style="margin-bottom:8px">
+              <span class="sensor-lbl">Wheel speed FR</span>
+              <div class="bar-bg"><div class="bar-fill" id="b-wfr" style="width:0%;background:var(--blue)"></div></div>
+              <span class="sensor-val" id="v-wfr">—</span>
+            </div>
+            <div class="sensor-row" style="margin-bottom:8px">
+              <span class="sensor-lbl">Wheel speed RL</span>
+              <div class="bar-bg"><div class="bar-fill" id="b-wrl" style="width:0%;background:var(--blue)"></div></div>
+              <span class="sensor-val" id="v-wrl">—</span>
+            </div>
+            <div class="sensor-row">
+              <span class="sensor-lbl">Wheel speed RR</span>
+              <div class="bar-bg"><div class="bar-fill" id="b-wrr" style="width:0%;background:var(--blue)"></div></div>
+              <span class="sensor-val" id="v-wrr">—</span>
+            </div>
+          </div>
+          <div>
+            <div class="sensor-row" style="margin-bottom:8px">
+              <span class="sensor-lbl">Long. acceleration</span>
+              <div class="bar-bg"><div class="bar-fill" id="b-acc" style="width:0%;background:var(--teal)"></div></div>
+              <span class="sensor-val" id="v-acc">—</span>
+            </div>
+            <div class="sensor-row" style="margin-bottom:8px">
+              <span class="sensor-lbl">Brake pressure</span>
+              <div class="bar-bg"><div class="bar-fill" id="b-brake" style="width:0%;background:var(--red)"></div></div>
+              <span class="sensor-val" id="v-brake">—</span>
+            </div>
+            <div class="sensor-row" style="margin-bottom:8px">
+              <span class="sensor-lbl">Gear position</span>
+              <div class="bar-bg"><div class="bar-fill" id="b-gear" style="width:0%;background:var(--amber)"></div></div>
+              <span class="sensor-val" id="v-gear">—</span>
+            </div>
+            <div class="sensor-row">
+              <span class="sensor-lbl">Cycle time (sim)</span>
+              <div class="bar-bg"><div class="bar-fill" id="b-cyc" style="width:50%;background:var(--purple)"></div></div>
+              <span class="sensor-val" id="v-cyc">10 ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="panel">
+      <div class="panel-hdr">
+        <span class="dot"></span>Direction timeline
+        <button class="animate-btn" id="anim-btn" style="margin-left:auto">▶ Animate</button>
+      </div>
+      <div class="panel-body">
+        <div class="timeline-wrap"><canvas id="timeline"></canvas></div>
+        <div class="tl-legend">
+          <div class="tl-leg-item"><div class="tl-leg-dot" style="background:var(--teal)"></div>Forward</div>
+          <div class="tl-leg-item"><div class="tl-leg-dot" style="background:var(--amber)"></div>Reverse</div>
+          <div class="tl-leg-item"><div class="tl-leg-dot" style="background:var(--muted)"></div>Standstill</div>
+          <div class="tl-leg-item"><div class="tl-leg-dot" style="background:var(--coral)"></div>Unknown / Transition</div>
+          <div class="tl-leg-item" style="margin-left:auto"><div class="tl-leg-dot" style="background:var(--blue);opacity:.5"></div>Confidence %</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagnostics -->
+    <div class="panel">
+      <div class="panel-hdr"><span class="dot"></span>Diagnostic word (8-bit)</div>
+      <div class="panel-body">
+        <div class="diag-grid">
+          <span class="diag-flag" id="d-gm">gear_mismatch [bit 0]</span>
+          <span class="diag-flag" id="d-wf">wheel_fault [bit 1]</span>
+          <span class="diag-flag" id="d-ls">low_speed_mode [bit 2]</span>
+          <span class="diag-flag" id="d-ta">transition_active [bit 3]</span>
+          <span class="diag-flag" id="d-cd">confidence_degraded [bit 4]</span>
+          <span class="diag-flag" id="d-pc">plausibility_conflict [bit 5]</span>
+        </div>
+        <div style="margin-top:8px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">
+          CAN byte: <span id="can-byte" style="color:var(--teal-l)">0x00</span>
+          &nbsp;·&nbsp;
+          binary: <span id="can-bin" style="color:var(--teal-l)">0000 0000</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Challenge + Safety -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="challenge-box">
+        <div class="challenge-title" id="ch-title">Algorithm challenge</div>
+        <div class="challenge-text" id="ch-text">Select a scenario to see the key algorithmic challenge and how DDR handles it.</div>
+        <div class="approach-text" id="ch-approach"></div>
+      </div>
+      <div class="safety-box">
+        <div class="safety-title">ISO 26262 relevance</div>
+        <div class="safety-text" id="safety-text">Select a scenario to see the safety implication for downstream systems (ESP, HSA, Park Assist).</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Scenario data ─────────────────────────────────────────────────────────────
+const SCENARIOS = [
+  {
+    id:'normal_fwd', name:'Normal forward', badge:'baseline',
+    desc:'50 km/h · gear=D',
+    frames: gen(150, t=>({
+      wfl:50+rnd(.3),wfr:50+rnd(.3),wrl:50+rnd(.3),wrr:50+rnd(.3),
+      acc:0.2+rnd(.05),brake:0,gear:'D',
+      dir: t>30?'FORWARD':'UNKNOWN', conf: Math.min(88,t*2.5+20),
+      diag:{}
+    })),
+    challenge:'Baseline — all sensors agree on forward motion.',
+    approach:'Wheel speeds positive, gear=D, acc>0. Plausibility engine gives unanimous FORWARD vote. Confidence reaches ~88% after state ramp-up.',
+    safety:'All downstream consumers (ESP, HSA, park assist) are unambiguously informed. ESC applies any intervention in the forward direction.'
+  },
+  {
+    id:'reverse_park', name:'Reverse parking', badge:'normal',
+    desc:'5 km/h · gear=R',
+    frames: gen(120, t=>({
+      wfl:5+rnd(.2),wfr:5+rnd(.2),wrl:5+rnd(.2),wrr:5+rnd(.2),
+      acc:-0.3+rnd(.05),brake:t>80?15:3,gear:'R',
+      dir:t>25?'REVERSE':'UNKNOWN', conf:Math.min(92,t*2.8+10),
+      diag:{}
+    })),
+    challenge:'Unambiguous reverse. Gear=R is the primary signal at low speed.',
+    approach:'Gear=R gets high vote weight at low speed. Negative acc (deceleration into space) corroborates. Plausibility engine produces unanimous REVERSE.',
+    safety:'HSA must apply brake hold in the reverse direction. Park assist systems depend on REVERSE output to enable ultrasonic proximity alerts.'
+  },
+  {
+    id:'gear_mismatch', name:'Gear mismatch', badge:'edge case',
+    desc:'Stale CAN · gear=R vs speed fwd',
+    frames: gen(150, t=>({
+      wfl:20+rnd(.3),wfr:20+rnd(.3),wrl:20+rnd(.3),wrr:20+rnd(.3),
+      acc:1.2+rnd(.08),brake:0,gear: t<60?'R':'D',
+      dir:t>30?'FORWARD':'UNKNOWN', conf:Math.min(78,t*1.8+10),
+      diag:{gear_mismatch: t<80 && t>5, confidence_degraded: t<50}
+    })),
+    challenge:'Vehicle moving forward at 20 km/h but gear=R (stale CAN message — 600ms delay).',
+    approach:'At >3 km/h, physical sensors (wheel speed + acc) override gear signal. Cross-check detects contradiction → gear_mismatch flag → FORWARD output with reduced confidence.',
+    safety:'Critical for ESP. If gear signal were trusted, ESC would apply brake force in the wrong direction. Physical sensor priority is the standard industry mitigation for gateway latency.'
+  },
+  {
+    id:'hill_rollback', name:'Hill rollback', badge:'edge case',
+    desc:'Neutral · acc<0 · rolling back',
+    frames: gen(200, t=>({
+      wfl:Math.min(6,t*0.04)+rnd(.2),wfr:Math.min(6,t*0.04)+rnd(.2),
+      wrl:Math.min(6,t*0.04)+rnd(.2),wrr:Math.min(6,t*0.04)+rnd(.2),
+      acc:-0.4+rnd(.06),brake:0,gear:'N',
+      dir:t>60?'REVERSE':'UNKNOWN', conf:Math.min(65,Math.max(0,(t-60)*1.2+10)),
+      diag:{low_speed_mode:t<30, confidence_degraded:t<100}
+    })),
+    challenge:'Rolling backwards on a hill, gear=N. Wheel speed sensors are magnitude-only — they cannot detect direction from pulses alone.',
+    approach:'Neutral rollback check: gear=N + acc<−0.15 + speed>0.5 km/h → REVERSE vote (weight 0.6–0.8 based on acc magnitude). Confidence is lower than gear=R because no gear signal corroboration.',
+    safety:'HSA must detect rollback before the driver, typically within 200ms. False negative (missed rollback) causes the vehicle to accelerate backwards. This edge case is why DDR needs the accelerometer in addition to wheel speeds.'
+  },
+  {
+    id:'standstill', name:'Standstill (traffic)', badge:'normal',
+    desc:'Speed=0 · brake=80 bar',
+    frames: gen(80, t=>({
+      wfl:rnd(.05),wfr:rnd(.05),wrl:rnd(.05),wrr:rnd(.05),
+      acc:rnd(.04),brake:80,gear:'D',
+      dir:t>10?'STANDSTILL':'UNKNOWN', conf:Math.min(99,t*4+30),
+      diag:{low_speed_mode:true}
+    })),
+    challenge:'All wheel speeds ≈ 0, high brake pressure. Must reach STANDSTILL quickly for downstream systems.',
+    approach:'Speed below noise floor (0.5 km/h) + brake > 20 bar → plausibility vote weight 0.95 for STANDSTILL. Reaches 99% confidence within ~300ms.',
+    safety:'Standstill is required before automated park brake engagement and gear interlock release. False standstill during coasting is the primary failure mode to avoid.'
+  },
+  {
+    id:'wheel_fault', name:'Wheel sensor fault', badge:'edge case',
+    desc:'FL stuck at 0 · 35 km/h fwd',
+    frames: gen(150, t=>({
+      wfl:0, wfr:35+rnd(.3),wrl:35+rnd(.3),wrr:35+rnd(.3),
+      acc:0.5+rnd(.07),brake:0,gear:'D',
+      dir:t>40?'FORWARD':'UNKNOWN', conf:Math.min(60,t*1.5+10),
+      diag:{wheel_fault:true, confidence_degraded:true}
+    })),
+    challenge:'Front-left wheel speed sensor stuck at zero. Three other wheels at 35 km/h. Must continue operating with degraded confidence.',
+    approach:'Outlier rejection after 5 consecutive cycles: FL deviation >8 km/h from peer mean → FL flagged FAULT. Algorithm continues on 3 healthy wheels. Confidence penalised by 10%.',
+    safety:'ISO 26262 ASIL-C requirement: DDR must degrade gracefully on sensor failure — continue providing direction output with a fault flag, rather than outputting UNKNOWN and disabling ESP.'
+  },
+  {
+    id:'kturn', name:'K-turn transition', badge:'edge case',
+    desc:'Mid 3-point turn',
+    frames: gen(100, t=>({
+      wfl:Math.max(0,t<40?5-t*0.1:t*0.03)+rnd(.2),
+      wfr:Math.max(0,t<40?5-t*0.1:t*0.03)+rnd(.2),
+      wrl:Math.max(0,t<40?5-t*0.1:t*0.03)+rnd(.2),
+      wrr:Math.max(0,t<40?5-t*0.1:t*0.03)+rnd(.2),
+      acc:t<40?-1.5:0.8, brake:t<40?60:0, gear:t<30?'R':'D',
+      dir:t<10?'REVERSE':t<55?'UNKNOWN':'FORWARD',
+      conf:t<10?80:t<55?25:Math.min(75,(t-55)*2+25),
+      diag:{transition_active:t>10&&t<55, confidence_degraded:t<60, gear_mismatch:t>28&&t<45}
+    })),
+    challenge:'Mid 3-point turn: braking from reverse, gear just shifted to D, vehicle not yet moving forward.',
+    approach:'FSM enters TRANSITIONING_FWD state. 200ms debounce holds output at UNKNOWN. transition_active flag is set. Downstream systems must hold last safe state during this window.',
+    safety:'During a K-turn, an incorrect ESC intervention in the wrong direction could push the vehicle into an obstacle. The debounce window prevents premature direction commit during the braking-to-reverse transition.'
+  },
+  {
+    id:'creep', name:'Low-speed creep', badge:'edge case',
+    desc:'<1 km/h · parking lot',
+    frames: gen(200, t=>({
+      wfl:0.7+rnd(.15),wfr:0.8+rnd(.15),wrl:0.7+rnd(.15),wrr:0.8+rnd(.15),
+      acc:0.04+rnd(.04),brake:5,gear:'D',
+      dir:t>50?'FORWARD':'UNKNOWN', conf:Math.min(58,Math.max(0,(t-50)*0.8+20)),
+      diag:{low_speed_mode:true, confidence_degraded:true}
+    })),
+    challenge:'Creeping forward at 0.8 km/h. Wheel speed pulses are in the sensor noise band — SNR too low for reliable direction from wheel speeds alone.',
+    approach:'Low-speed mode: gear=D contributes more (weight 0.6 vs 0.5 normally). Brake delta (releasing brake → positive direction evidence) counted. Confidence capped at ~60% at creep speeds.',
+    safety:'Park assist and APA systems operate at creep speeds. Incorrect DDR causes steering in the wrong direction. Special low-speed logic and lower confidence threshold for downstream consumers are required.'
+  },
+];
+
+// ── Simple DDR simulation ──────────────────────────────────────────────────────
+function rnd(std){return (Math.random()-0.5)*2*std}
+function gen(n, fn){return Array.from({length:n},(_,i)=>fn(i))}
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let currentScenario = null;
+let animFrame = null;
+let animIdx = 0;
+let isAnimating = false;
+let timelineData = [];
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('timeline');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas(){
+  const r = canvas.parentElement.getBoundingClientRect();
+  canvas.width = r.width * devicePixelRatio;
+  canvas.height = r.height * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  canvas.style.width = r.width+'px';
+  canvas.style.height = r.height+'px';
+  if(timelineData.length) drawTimeline(timelineData, timelineData.length);
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+// ── Scenario list ─────────────────────────────────────────────────────────────
+const scList = document.getElementById('sc-list');
+SCENARIOS.forEach((sc,i) => {
+  const btn = document.createElement('button');
+  btn.className = 'sc-btn';
+  btn.innerHTML = `
+    <span class="sc-name">${sc.name}
+      <span style="font-size:9px;padding:1px 6px;border-radius:3px;margin-left:6px;
+        background:${sc.badge==='edge case'?'var(--coral-bg)':'var(--surface3)'};
+        color:${sc.badge==='edge case'?'var(--coral-l)':'var(--muted)'};"
+      >${sc.badge}</span>
+    </span>
+    <span class="sc-desc">${sc.desc}</span>
+  `;
+  btn.onclick = () => selectScenario(sc, btn);
+  scList.appendChild(btn);
+});
+
+function selectScenario(sc, btn){
+  stopAnimation();
+  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentScenario = sc;
+  timelineData = sc.frames;
+  resizeCanvas();
+  renderFrame(sc.frames[sc.frames.length-1], sc.frames.length);
+  drawTimeline(sc.frames, sc.frames.length);
+  document.getElementById('ch-title').textContent = 'Algorithm challenge — '+sc.name;
+  document.getElementById('ch-text').textContent = sc.challenge;
+  document.getElementById('ch-approach').textContent = '→ '+sc.approach;
+  document.getElementById('safety-text').textContent = sc.safety;
+}
+
+// ── Frame renderer ────────────────────────────────────────────────────────────
+function renderFrame(f, idx){
+  const maxSpeed = 140, maxAcc = 10, maxBrake = 100;
+  const setBar = (id, val, max) => {
+    document.getElementById('b-'+id).style.width = Math.min(100, Math.abs(val)/max*100)+'%';
+  };
+  const setVal = (id, txt) => { document.getElementById('v-'+id).textContent = txt; };
+
+  setBar('wfl', f.wfl, maxSpeed); setVal('wfl', f.wfl.toFixed(1)+' km/h');
+  setBar('wfr', f.wfr, maxSpeed); setVal('wfr', f.wfr.toFixed(1)+' km/h');
+  setBar('wrl', f.wrl, maxSpeed); setVal('wrl', f.wrl.toFixed(1)+' km/h');
+  setBar('wrr', f.wrr, maxSpeed); setVal('wrr', f.wrr.toFixed(1)+' km/h');
+  setBar('acc', f.acc, maxAcc);   setVal('acc', f.acc.toFixed(2)+' m/s²');
+  setBar('brake', f.brake, maxBrake); setVal('brake', f.brake.toFixed(0)+' bar');
+  const gearMap = {'D':4,'N':3,'R':2,'P':1};
+  setBar('gear', gearMap[f.gear]||1, 4); setVal('gear', f.gear);
+  setVal('cyc', '10 ms');
+
+  // Direction card
+  const card = document.getElementById('card-dir');
+  const dirVal = document.getElementById('val-dir');
+  card.className = 'dir-card';
+  if(f.dir==='FORWARD') card.classList.add('active-fwd');
+  else if(f.dir==='REVERSE') card.classList.add('active-rev');
+  else if(f.dir==='STANDSTILL') card.classList.add('active-ss');
+  else card.classList.add('active-unk');
+  dirVal.textContent = f.dir;
+
+  // Confidence
+  const conf = Math.max(0, Math.min(100, f.conf));
+  document.getElementById('val-conf').textContent = conf.toFixed(0)+'%';
+  document.getElementById('val-time').textContent = (idx*10)+'ms';
+  const fill = document.getElementById('conf-fill');
+  fill.style.width = conf+'%';
+  fill.style.background = conf>70?'var(--teal)':conf>40?'var(--amber)':'var(--coral)';
+  document.getElementById('conf-pct').textContent = conf.toFixed(0)+'%';
+
+  // Diagnostics
+  const d = f.diag||{};
+  const flagMap = {
+    'gm':'gear_mismatch','wf':'wheel_fault','ls':'low_speed_mode',
+    'ta':'transition_active','cd':'confidence_degraded','pc':'plausibility_conflict'
+  };
+  const diagKeys = {
+    gm:'gear_mismatch',wf:'wheel_fault',ls:'low_speed_mode',
+    ta:'transition_active',cd:'confidence_degraded',pc:'plausibility_conflict'
+  };
+  let byte = 0;
+  Object.entries(diagKeys).forEach(([k,dk],bi)=>{
+    const el = document.getElementById('d-'+k);
+    const active = !!d[dk];
+    el.className = 'diag-flag'+(active?' on':'');
+    if(active) byte |= (1<<bi);
+  });
+  document.getElementById('can-byte').textContent = '0x'+byte.toString(16).padStart(2,'0').toUpperCase();
+  document.getElementById('can-bin').textContent = byte.toString(2).padStart(8,'0').replace(/(.{4})/g,'$1 ').trim();
+
+  // Pipeline highlight
+  ['p1','p2','p3','p4','p5'].forEach((id,i)=>{
+    document.getElementById(id).className = 'pipe-step'+(isAnimating && animIdx%5===i?' active':'');
+  });
+}
+
+// ── Timeline drawing ──────────────────────────────────────────────────────────
+function drawTimeline(frames, upTo){
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
+  ctx.clearRect(0,0,w,h);
+
+  const dirColor = {
+    'FORWARD':'#1D9E75','REVERSE':'#D4900A',
+    'STANDSTILL':'#7a7870','UNKNOWN':'#D85A30'
+  };
+
+  // Draw direction bands
+  const bandH = h*0.55;
+  frames.slice(0,upTo).forEach((f,i)=>{
+    const x = (i/frames.length)*w;
+    const bw = w/frames.length + 1;
+    ctx.fillStyle = dirColor[f.dir]||'#D85A30';
+    ctx.globalAlpha = 0.7;
+    ctx.fillRect(x, 0, bw, bandH);
+  });
+
+  // Draw confidence line
+  ctx.globalAlpha = 0.9;
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(55,138,221,0.7)';
+  ctx.lineWidth = 1.5;
+  frames.slice(0,upTo).forEach((f,i)=>{
+    const x = (i/frames.length)*w;
+    const y = bandH + (1 - f.conf/100)*(h-bandH)*0.9;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Playhead
+  if(isAnimating && upTo < frames.length){
+    const px = (upTo/frames.length)*w;
+    ctx.globalAlpha = 0.8;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px,0);
+    ctx.lineTo(px,h);
+    ctx.stroke();
+  }
+
+  ctx.globalAlpha = 1;
+
+  // Labels
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = `10px DM Mono, monospace`;
+  ctx.fillText('direction', 6, 12);
+  ctx.fillText('confidence', 6, bandH+14);
+}
+
+// ── Animation ─────────────────────────────────────────────────────────────────
+const animBtn = document.getElementById('anim-btn');
+animBtn.onclick = toggleAnimation;
+
+function toggleAnimation(){
+  if(isAnimating){ stopAnimation(); return; }
+  if(!currentScenario) return;
+  isAnimating = true;
+  animIdx = 0;
+  animBtn.textContent = '■ Stop';
+  animBtn.classList.add('running');
+  animate();
+}
+
+function stopAnimation(){
+  isAnimating = false;
+  if(animFrame) cancelAnimationFrame(animFrame);
+  animBtn.textContent = '▶ Animate';
+  animBtn.classList.remove('running');
+  if(currentScenario) {
+    renderFrame(currentScenario.frames[currentScenario.frames.length-1], currentScenario.frames.length);
+    drawTimeline(currentScenario.frames, currentScenario.frames.length);
+  }
+}
+
+let lastTs = 0;
+function animate(ts=0){
+  if(!isAnimating) return;
+  if(ts - lastTs > 60){ // ~16fps for visible effect
+    lastTs = ts;
+    const f = currentScenario.frames[animIdx];
+    renderFrame(f, animIdx);
+    drawTimeline(currentScenario.frames, animIdx);
+    animIdx++;
+    if(animIdx >= currentScenario.frames.length){
+      setTimeout(stopAnimation, 500);
+      return;
+    }
+  }
+  animFrame = requestAnimationFrame(animate);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('load', ()=>{
+  resizeCanvas();
+  // Auto-select first scenario
+  scList.querySelector('.sc-btn').click();
+});
+</script>
+</body>
+</html>
