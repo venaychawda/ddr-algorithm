@@ -104,6 +104,27 @@ canvas#timeline{width:100%;height:100%;display:block}
 .animate-btn:hover{background:var(--teal);color:#fff}
 .animate-btn.running{background:var(--coral-bg);border-color:var(--coral);color:var(--coral-l)}
 
+/* Step-by-step guide banner */
+.guide{max-width:1040px;margin:0 auto 16px;display:flex;align-items:stretch;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.guide-step{flex:1;padding:14px 18px;display:flex;align-items:flex-start;gap:12px;background:var(--surface);transition:background .3s}
+.guide-step.done{background:rgba(29,158,117,0.05)}
+.guide-divider{width:1px;background:var(--border);flex-shrink:0}
+.guide-num{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--muted);flex-shrink:0;transition:all .3s}
+.guide-step.active .guide-num{border-color:var(--teal);color:var(--teal-l);background:var(--teal-bg)}
+.guide-step.done .guide-num{border-color:var(--teal);background:var(--teal);color:#fff}
+.guide-title{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:3px;transition:color .3s}
+.guide-step.active .guide-title{color:var(--teal-l)}
+.guide-step.done .guide-title{color:var(--text)}
+.guide-desc{font-size:11px;color:var(--dim);line-height:1.5}
+.guide-step.active .guide-desc,.guide-step.done .guide-desc{color:var(--muted)}
+.guide-hint{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:3px;border:1px solid transparent}
+.guide-step.active .guide-hint{background:var(--teal-bg);color:var(--teal-l);border-color:rgba(29,158,117,0.3)}
+.guide-step.done .guide-hint{background:rgba(29,158,117,0.08);color:var(--teal)}
+.guide-step:not(.active):not(.done) .guide-hint{background:var(--surface3);color:var(--dim)}
+.guide-arrow{padding:0 10px;display:flex;align-items:center;background:var(--surface);color:var(--dim);font-size:18px;flex-shrink:0}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 0 0 rgba(29,158,117,0.5)}50%{box-shadow:0 0 0 7px rgba(29,158,117,0)}}
+.animate-btn.pulse{animation:pulse-glow 1.5s ease-in-out infinite}
+
 /* Layer pipeline mini-vis */
 .pipeline{display:flex;align-items:center;gap:0;margin-bottom:6px;flex-wrap:wrap}
 .pipe-step{font-size:10px;padding:3px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);white-space:nowrap;transition:all .2s}
@@ -126,6 +147,39 @@ canvas#timeline{width:100%;height:100%;display:block}
     Venay Chawda · Function Owner DDR @ Bosch
   </div>
 </div>
+
+<div class="guide" id="guide-bar">
+  <!-- Step 1 -->
+  <div class="guide-step active" id="guide-step1">
+    <div class="guide-num" id="gn1">1</div>
+    <div>
+      <div class="guide-title">Select a driving scenario</div>
+      <div class="guide-desc">Choose any scenario from the left panel — normal driving, edge cases, or sensor faults.</div>
+      <div class="guide-hint" id="gh1">← pick one from the list</div>
+    </div>
+  </div>
+  <div class="guide-arrow">›</div>
+  <!-- Step 2 -->
+  <div class="guide-step" id="guide-step2">
+    <div class="guide-num" id="gn2">2</div>
+    <div>
+      <div class="guide-title">Click Animate to play back</div>
+      <div class="guide-desc">Watch sensor signals update in real time as the algorithm processes each 10ms cycle.</div>
+      <div class="guide-hint" id="gh2">▶ Animate button — Direction timeline panel</div>
+    </div>
+  </div>
+  <div class="guide-arrow">›</div>
+  <!-- Step 3 -->
+  <div class="guide-step" id="guide-step3">
+    <div class="guide-num" id="gn3">3</div>
+    <div>
+      <div class="guide-title">Explore the outputs</div>
+      <div class="guide-desc">Observe DDR direction, confidence score, diagnostic flags, and the ISO 26262 safety note below.</div>
+      <div class="guide-hint" id="gh3">try all 8 edge cases</div>
+    </div>
+  </div>
+</div>
+
 
 <div class="layout">
 
@@ -451,6 +505,37 @@ SCENARIOS.forEach((sc,i) => {
   scList.appendChild(btn);
 });
 
+function updateGuide(step){
+  // step: 1=scenario selected, 2=animating, 3=animation done
+  const s1=document.getElementById('guide-step1');
+  const s2=document.getElementById('guide-step2');
+  const s3=document.getElementById('guide-step3');
+  const gn1=document.getElementById('gn1');
+  const gn2=document.getElementById('gn2');
+  const gn3=document.getElementById('gn3');
+  const gh1=document.getElementById('gh1');
+  const gh2=document.getElementById('gh2');
+  if(step>=1){
+    s1.classList.remove('active'); s1.classList.add('done');
+    gn1.textContent='✓';
+    gh1.textContent='✓ scenario selected';
+    s2.classList.add('active');
+    gh2.textContent='▶ click Animate now';
+    document.getElementById('anim-btn').classList.add('pulse');
+  }
+  if(step>=2){
+    s2.classList.remove('active'); s2.classList.add('done');
+    gn2.textContent='✓';
+    gh2.textContent='✓ animating';
+    document.getElementById('anim-btn').classList.remove('pulse');
+    s3.classList.add('active');
+  }
+  if(step>=3){
+    s3.classList.remove('active'); s3.classList.add('done');
+    gn3.textContent='✓';
+  }
+}
+
 function selectScenario(sc, btn){
   stopAnimation();
   document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
@@ -464,6 +549,7 @@ function selectScenario(sc, btn){
   document.getElementById('ch-text').textContent = sc.challenge;
   document.getElementById('ch-approach').textContent = '→ '+sc.approach;
   document.getElementById('safety-text').textContent = sc.safety;
+  updateGuide(1);
 }
 
 // ── Frame renderer ────────────────────────────────────────────────────────────
@@ -593,6 +679,7 @@ function toggleAnimation(){
   animIdx = 0;
   animBtn.textContent = '■ Stop';
   animBtn.classList.add('running');
+  updateGuide(2);
   animate();
 }
 
@@ -617,7 +704,7 @@ function animate(ts=0){
     drawTimeline(currentScenario.frames, animIdx);
     animIdx++;
     if(animIdx >= currentScenario.frames.length){
-      setTimeout(stopAnimation, 500);
+      setTimeout(()=>{ stopAnimation(); updateGuide(3); }, 500);
       return;
     }
   }
