@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+ 
+[project]
+name = "vehicle-ddr"
+version = "1.0.0"
+description = "Drive Direction Recognition algorithm for automotive VDC/ESP systems"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [{name = "Venay Chawda", email = "venaychawda@gmail.com"}]
+keywords = ["automotive", "vehicle-dynamics", "ESP", "VDC", "safety", "ISO-26262"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Automotive",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.10"
+dependencies = ["ddr-core"]
+ 
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pytest-cov>=4.1"]
+viz = ["plotly>=5.18", "pandas>=2.1", "streamlit>=1.28"]
+ 
+[project.urls]
+Homepage = "https://github.com/venaychawda/ddr-algorithm"
+Repository = "https://github.com/venaychawda/ddr-algorithm"
+ 
+[tool.setuptools.packages.find]
+include = ["ddr_algorithm*"]
+ 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+ 
+[tool.coverage.run]
+source = ["ddr_algorithm"]

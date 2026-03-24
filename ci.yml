@@ -1,0 +1,72 @@
+# ─────────────────────────────────────────────────────────────────
+# CI — Continuous Integration
+# Runs on every push and pull request to main.
+# Responsibilities:
+#   - Lint (ruff) and type-check (mypy) public source
+#   - Verify wheel installs cleanly on all Python versions
+#   - Build the package to confirm pyproject.toml is valid
+# ─────────────────────────────────────────────────────────────────
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint & type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install lint tools
+        run: pip install ruff mypy
+      - name: ruff — style + import order
+        run: ruff check ddr_algorithm/ --select E,F,I --ignore E501
+      - name: mypy — type checking (public API)
+        run: |
+          mypy ddr_algorithm/engine.py \
+               ddr_algorithm/models/vehicle_signals.py \
+               --ignore-missing-imports --no-strict-optional
+
+  build:
+    name: Build & install — Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install core wheel
+        run: pip install wheels/ddr_core-1.0.0-py3-none-any.whl
+      - name: Install package
+        run: pip install -e .
+      - name: Smoke-test import
+        run: |
+          python -c "
+          from ddr_algorithm import DDREngine, VehicleSignals, WheelSpeeds, GearPosition
+          engine = DDREngine()
+          sig = VehicleSignals(
+              timestamp_ms=0.0,
+              wheel_speeds=WheelSpeeds(fl=50, fr=50, rl=50, rr=50),
+              gear_position=GearPosition.DRIVE,
+              longitudinal_acceleration=0.5,
+              brake_pressure_bar=0.0,
+          )
+          out = engine.process(sig)
+          print(f'OK — {out.direction.value} {out.confidence:.0f}%')
+          "
+      - name: Build wheel
+        run: |
+          pip install build
+          python -m build --wheel
+          ls dist/
