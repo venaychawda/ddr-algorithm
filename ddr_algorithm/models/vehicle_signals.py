@@ -9,7 +9,7 @@ user code continues to work unchanged:
     from ddr_core import VehicleSignals                               # also OK
 """
 
-from ddr_core.vehicle_signals import (  # noqa: F401
+from ddr_core.vehicle_signals import (
     DDROutput,
     DiagnosticWord,
     DriveDirection,

@@ -19,7 +19,6 @@ The 8 edge cases:
 Run with:  pytest tests/test_edge_cases/ -v
 """
 
-import pytest
 from ddr_algorithm.engine import DDREngine
 from ddr_algorithm.models.vehicle_signals import (
     DriveDirection, GearPosition, VehicleSignals, WheelSpeeds

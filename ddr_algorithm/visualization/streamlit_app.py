@@ -19,8 +19,21 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import io
-import csv
+
+from ddr_algorithm.engine import DDREngine
+from ddr_algorithm.models.vehicle_signals import (
+    VehicleSignals, WheelSpeeds, GearPosition, DriveDirection
+)
+from ddr_algorithm.simulation.vehicle_model import (
+    VehicleModel, manoeuvre_city_drive, manoeuvre_reverse_parking,
+    manoeuvre_hill_start, manoeuvre_k_turn, manoeuvre_abs_stop,
+)
+from ddr_algorithm.simulation.scenario_generator import (
+    ScenarioGenerator, get_all_scenarios
+)
+from ddr_algorithm.core.diagnostics import (
+    SessionSummary, iter_diagnostic_events
+)
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -28,23 +41,6 @@ st.set_page_config(
     page_icon="🚗",
     layout="wide",
     initial_sidebar_state="expanded",
-)
-
-# ── Imports ────────────────────────────────────────────────────────────────────
-from ddr_algorithm.engine import DDREngine
-from ddr_algorithm.models.vehicle_signals import (
-    VehicleSignals, WheelSpeeds, GearPosition, DriveDirection
-)
-from ddr_algorithm.simulation.vehicle_model import (
-    VehicleModel, ManoeuvrePoint,
-    manoeuvre_city_drive, manoeuvre_reverse_parking,
-    manoeuvre_hill_start, manoeuvre_k_turn, manoeuvre_abs_stop,
-)
-from ddr_algorithm.simulation.scenario_generator import (
-    ScenarioGenerator, get_all_scenarios
-)
-from ddr_algorithm.core.diagnostics import (
-    SessionSummary, format_diagnostic_summary, iter_diagnostic_events
 )
 
 # ── Colour palette ─────────────────────────────────────────────────────────────
