@@ -14,7 +14,6 @@ Typical usage:
 """
 
 from ddr_algorithm.engine import DDREngine
-
 from ddr_algorithm.models.vehicle_signals import (
     DDROutput,
     DiagnosticWord,

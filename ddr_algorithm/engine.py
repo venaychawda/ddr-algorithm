@@ -19,14 +19,18 @@ Usage:
 
 from __future__ import annotations
 
-from ddr_algorithm.models.vehicle_signals import (
-    VehicleSignals, DDROutput, DriveDirection
-)
 from ddr_core import (
-    aggregate_votes,
     ConfidenceScorer,
     DirectionStateMachine,
-    PlausibilityEngine,SignalProcessor
+    PlausibilityEngine,
+    SignalProcessor,
+    aggregate_votes,
+)
+
+from ddr_algorithm.models.vehicle_signals import (
+    DDROutput,
+    DriveDirection,
+    VehicleSignals,
 )
 
 

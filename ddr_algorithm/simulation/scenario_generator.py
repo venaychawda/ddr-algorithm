@@ -15,13 +15,16 @@ Noise model references:
 """
 
 from __future__ import annotations
+
 import random
 from dataclasses import dataclass
 
 from ddr_algorithm.models.vehicle_signals import (
-    VehicleSignals, WheelSpeeds, GearPosition, DriveDirection
+    DriveDirection,
+    GearPosition,
+    VehicleSignals,
+    WheelSpeeds,
 )
-
 
 # ── Noise model parameters ─────────────────────────────────────────────────────
 
