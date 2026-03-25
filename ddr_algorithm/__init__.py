@@ -14,14 +14,15 @@ Typical usage:
 """
 
 from ddr_algorithm.engine import DDREngine
+
 from ddr_algorithm.models.vehicle_signals import (
-    VehicleSignals,
-    WheelSpeeds,
-    GearPosition,
-    DriveDirection,
     DDROutput,
     DiagnosticWord,
+    DriveDirection,
+    GearPosition,
     SensorStatus,
+    VehicleSignals,
+    WheelSpeeds,
 )
 
 __version__ = "1.0.0"

@@ -10,13 +10,13 @@ user code continues to work unchanged:
 """
 
 from ddr_core.vehicle_signals import (  # noqa: F401
-    VehicleSignals,
-    WheelSpeeds,
-    GearPosition,
-    DriveDirection,
     DDROutput,
     DiagnosticWord,
+    DriveDirection,
+    GearPosition,
     SensorStatus,
+    VehicleSignals,
+    WheelSpeeds,
 )
 
 __all__ = [

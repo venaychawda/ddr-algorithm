@@ -17,7 +17,7 @@ import pytest
 from ddr_algorithm.engine import DDREngine
 from ddr_algorithm.models.vehicle_signals import DriveDirection
 from ddr_algorithm.simulation.scenario_generator import (
-    ScenarioGenerator, get_all_scenarios, ScenarioSpec
+    get_all_scenarios, ScenarioGenerator, ScenarioSpec
 )
 from ddr_core.diagnostics import SessionSummary
 
