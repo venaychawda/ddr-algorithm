@@ -9,7 +9,7 @@ A clean-room open-source implementation of the **Drive Direction Recognition (DD
 
 > **Background:** I was the Function Owner for Drive Direction Recognition at Bosch Global Software Technologies, responsible for this algorithm across all VDC platform projects in the India region — including ESP and Integrated Power Brake (IPB) systems. This repository is an independent, clean-room reimplementation based on standard automotive signal processing literature. No proprietary Bosch source code, calibration constants, or internal documents are used.
 
-**[▶ Live Demo](https://venaychawda-ddr-algorithm.streamlit.app)** · **[📓 Notebook walkthrough](notebooks/ddr_explained.ipynb)**
+**[▶ Live Demo](https://venaychawda.github.io/ddr-algorithm/)** · **[📓 Notebook walkthrough](notebooks/ddr_explained.ipynb)**
 
 ---
 
