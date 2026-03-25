@@ -20,7 +20,7 @@ Usage:
 from __future__ import annotations
 
 from ddr_algorithm.models.vehicle_signals import (
-    VehicleSignals, DDROutput, DriveDirection, DiagnosticWord
+    VehicleSignals, DDROutput, DriveDirection
 )
 from ddr_core import (
     SignalProcessor,

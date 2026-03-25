@@ -19,7 +19,7 @@ from ddr_algorithm.models.vehicle_signals import DriveDirection
 from ddr_algorithm.simulation.scenario_generator import (
     ScenarioGenerator, get_all_scenarios, ScenarioSpec
 )
-from ddr_algorithm.core.diagnostics import SessionSummary
+from ddr_core.diagnostics import SessionSummary
 
 
 # Confidence threshold: final output must meet this minimum

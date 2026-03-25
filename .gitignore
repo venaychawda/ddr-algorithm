@@ -4,3 +4,5 @@ vehicle_ddr.egg-info/requires.txt
 vehicle_ddr.egg-info/SOURCES.txt
 vehicle_ddr.egg-info/top_level.txt
 *.pyc
+*.txt
+/ddr_core.egg-info
